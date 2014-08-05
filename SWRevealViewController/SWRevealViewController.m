@@ -821,11 +821,32 @@ const int FrontViewPositionNone = 0xff;
 {
     FrontViewPosition toggledFrontViewPosition = FrontViewPositionLeft;
     if (_frontViewPosition <= FrontViewPositionLeft)
+    {
         toggledFrontViewPosition = FrontViewPositionRight;
+        
+        //Add overlay if requested
+        if (_shouldUseFrontViewOverlay) {
+            //Create
+            if (!_frontOverlayView) {
+                self.frontOverlayView = [[UIView alloc] initWithFrame:self.frontViewController.view.bounds];
+                _frontOverlayView.backgroundColor = [UIColor blackColor];
+                _frontOverlayView.alpha = 0.5;
+                UIButton * overlayButton = [[UIButton alloc] initWithFrame:_frontOverlayView.bounds];
+                [overlayButton addTarget:self action:@selector(revealToggleAnimated:) forControlEvents:UIControlEventTouchUpInside];
+                [_frontOverlayView addSubview:overlayButton];
+            }
+            [self.frontViewController.view addSubview:_frontOverlayView];
+        }
+    }
+    else
+    {
+        if ([[_frontViewController.view subviews] containsObject:_frontOverlayView]) {
+            [_frontOverlayView removeFromSuperview];
+        }
+    }
     
     [self setFrontViewPosition:toggledFrontViewPosition animated:animated];
 }
-
 
 - (void)rightRevealToggleAnimated:(BOOL)animated
 {
