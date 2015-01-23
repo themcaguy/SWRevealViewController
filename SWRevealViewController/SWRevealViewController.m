@@ -584,7 +584,7 @@ static CGFloat scaledValue( CGFloat v1, CGFloat min2, CGFloat max2, CGFloat min1
 }
 
 const int FrontViewPositionNone = 0xff;
-
+@synthesize shouldUseFrontViewOverlay,frontOverlayView;
 
 #pragma mark - Init
 
@@ -821,32 +821,35 @@ const int FrontViewPositionNone = 0xff;
 {
     FrontViewPosition toggledFrontViewPosition = FrontViewPositionLeft;
     if (_frontViewPosition <= FrontViewPositionLeft)
-    {
         toggledFrontViewPosition = FrontViewPositionRight;
-        
+    
+    [self setFrontViewPosition:toggledFrontViewPosition animated:animated];
+}
+
+-(void) addOverlayViewToFrontViewIfRequired:(FrontViewPosition) positionFrontView {
+    if (positionFrontView >= FrontViewPositionRight)
+    {
         //Add overlay if requested
-        if (_shouldUseFrontViewOverlay) {
-            //Create
-            if (!_frontOverlayView) {
-                self.frontOverlayView = [[UIView alloc] initWithFrame:self.frontViewController.view.bounds];
-                _frontOverlayView.backgroundColor = [UIColor blackColor];
-                _frontOverlayView.alpha = 0.5;
-                UIButton * overlayButton = [[UIButton alloc] initWithFrame:_frontOverlayView.bounds];
+        if (shouldUseFrontViewOverlay) {
+            if (!frontOverlayView) {
+                frontOverlayView = [[UIView alloc] initWithFrame:self.frontViewController.view.bounds];
+                frontOverlayView.backgroundColor = [UIColor blackColor];
+                frontOverlayView.alpha = 0.5;
+                UIButton * overlayButton = [[UIButton alloc] initWithFrame:frontOverlayView.bounds];
                 [overlayButton addTarget:self action:@selector(revealToggleAnimated:) forControlEvents:UIControlEventTouchUpInside];
-                [_frontOverlayView addSubview:overlayButton];
+                [frontOverlayView addSubview:overlayButton];
             }
-            [self.frontViewController.view addSubview:_frontOverlayView];
+            [self.frontViewController.view addSubview:frontOverlayView];
         }
     }
     else
     {
-        if ([[_frontViewController.view subviews] containsObject:_frontOverlayView]) {
-            [_frontOverlayView removeFromSuperview];
+        if ([[_frontViewController.view subviews] containsObject:frontOverlayView]) {
+            [frontOverlayView removeFromSuperview];
         }
     }
-    
-    [self setFrontViewPosition:toggledFrontViewPosition animated:animated];
 }
+
 
 - (void)rightRevealToggleAnimated:(BOOL)animated
 {
@@ -1339,6 +1342,7 @@ const int FrontViewPositionNone = 0xff;
     // restore user interaction and animate to the final position
     [self _restoreUserInteraction];
     [self _notifyPanGestureEnded];
+
     [self _setFrontViewPosition:frontViewPosition withDuration:duration];
 }
 
@@ -1457,6 +1461,8 @@ const int FrontViewPositionNone = 0xff;
         animations();
         completion(YES);
     }
+    
+    [self addOverlayViewToFrontViewIfRequired:newPosition];
 }
 
 
